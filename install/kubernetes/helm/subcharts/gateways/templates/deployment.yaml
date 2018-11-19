@@ -2,7 +2,7 @@
 {{- if and (ne $key "enabled") }}
 {{- if $spec.enabled }}
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: {{ if $spec.daemonSet }}DaemonSet{{ else }}Deployment{{ end }}
 metadata:
   name: {{ $key }}
   namespace: {{ $spec.namespace | default $.Release.Namespace }}
@@ -14,7 +14,9 @@ metadata:
     {{ $key }}: {{ $val }}
     {{- end }}
 spec:
+  {{- if not $spec.daemonSet }}
   replicas: {{ $spec.replicaCount }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -143,7 +145,7 @@ spec:
           - name: ISTIO_META_POD_NAME
             valueFrom:
               fieldRef:
-                fieldPath: metadata.name             
+                fieldPath: metadata.name
           {{- if $spec.env }}
           {{- range $key, $val := $spec.env }}
           - name: {{ $key }}
